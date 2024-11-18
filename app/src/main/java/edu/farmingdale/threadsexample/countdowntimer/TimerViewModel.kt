@@ -54,7 +54,6 @@ class TimerViewModel : ViewModel() {
                     delay(1000)
                     remainingMillis -= 1000
                 }
-
                 isRunning = false
             }
         }

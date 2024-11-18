@@ -1,30 +1,41 @@
 package edu.farmingdale.threadsexample.countdowntimer
 
-import android.util.Size
 import android.widget.NumberPicker
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.text.DecimalFormat
 import java.util.Locale
 import kotlin.time.Duration
@@ -35,6 +46,19 @@ fun TimerScreen(
     modifier: Modifier = Modifier,
     timerViewModel: TimerViewModel = viewModel()
 ) {
+    var currentProgress by remember { mutableStateOf(1f) }
+
+    if (timerViewModel.isRunning) {
+        val totalTime = timerViewModel.totalMillis
+        var timeLeft by remember { mutableStateOf(timerViewModel.remainingMillis) }
+        LaunchedEffect(timeLeft) {
+            while (timeLeft > 0) {
+                delay(1000)
+                timeLeft -= 1000
+                currentProgress = (timeLeft / totalTime.toFloat())
+            }
+        }
+    }
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
             modifier = modifier
@@ -49,7 +73,15 @@ fun TimerScreen(
                 text = timerText(timerViewModel.remainingMillis),
                 fontSize = 50.sp,
             )
+
         }
+        CircularProgressIndicator(
+            progress = { currentProgress },
+            modifier = Modifier.size(size = 100.dp),
+            strokeWidth = 15.dp,
+            strokeCap = StrokeCap.Round,
+        )
+        Spacer(modifier = Modifier.height(50.dp))
         TimePicker(
             hour = timerViewModel.selectedHour,
             min = timerViewModel.selectedMinute,
@@ -59,9 +91,16 @@ fun TimerScreen(
         if (timerViewModel.isRunning) {
             Button(
                 onClick = timerViewModel::cancelTimer,
-                modifier = modifier.padding(50.dp)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Red, // Primary color from theme
+                    contentColor = Color.Black // Text color from theme
+                ),
+                modifier = modifier.padding(20.dp)
             ) {
-                Text("Cancel", fontSize = 30.sp)
+                Text(
+                    "Cancel",
+                    fontSize = 30.sp,
+                )
             }
         } else {
             Button(
@@ -74,9 +113,9 @@ fun TimerScreen(
                 Text("Start", fontSize = 20.sp)
             }
         }
+
     }
 }
-
 
 fun timerText(timeInMillis: Long): String {
     val duration: Duration = timeInMillis.milliseconds
