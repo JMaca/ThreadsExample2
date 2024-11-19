@@ -47,15 +47,16 @@ fun TimerScreen(
     timerViewModel: TimerViewModel = viewModel()
 ) {
     var currentProgress by remember { mutableStateOf(1f) }
+    val totalTime by remember { mutableStateOf(timerViewModel.totalMillis) }
+    var timeLeft by remember { mutableStateOf(timerViewModel.remainingMillis) }
 
-    if (timerViewModel.isRunning) {
-        val totalTime = timerViewModel.totalMillis
-        var timeLeft by remember { mutableStateOf(timerViewModel.remainingMillis) }
-        LaunchedEffect(timeLeft) {
-            while (timeLeft > 0) {
-                delay(1000)
-                timeLeft -= 1000
-                currentProgress = (timeLeft / totalTime.toFloat())
+    LaunchedEffect(timeLeft) {
+        while (timeLeft > 0) {
+            delay(990)
+            timeLeft -= 1000
+            currentProgress = (timeLeft / totalTime.toFloat())
+            if (timeLeft == 0L) {
+                makeSound()
             }
         }
     }
@@ -72,6 +73,7 @@ fun TimerScreen(
             Text(
                 text = timerText(timerViewModel.remainingMillis),
                 fontSize = 50.sp,
+                color = if (timerViewModel.isRunning && timerViewModel.remainingMillis < 11000) Color.Red else Color.Black,
             )
 
         }
@@ -92,8 +94,8 @@ fun TimerScreen(
             Button(
                 onClick = timerViewModel::cancelTimer,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Red, // Primary color from theme
-                    contentColor = Color.Black // Text color from theme
+                    containerColor = Color.Red,
+                    contentColor = Color.Black
                 ),
                 modifier = modifier.padding(20.dp)
             ) {
@@ -115,6 +117,10 @@ fun TimerScreen(
         }
 
     }
+}
+
+fun makeSound() {
+    TODO("Not yet implemented")
 }
 
 fun timerText(timeInMillis: Long): String {
